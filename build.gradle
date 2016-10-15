@@ -21,6 +21,7 @@ sourceCompatibility = 1.5
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -35,6 +36,10 @@ dependencies {
 
     compile "org.apache.logging.log4j:log4j-api:$log4j_version"
     compile "org.apache.logging.log4j:log4j-core:$log4j_version"
+    //  needed for async log4j 2
+    compile 'com.lmax:disruptor:3.3.5'
+
+    compile 'org.msgpack:msgpack-core:0.8.11'
 
     //  bridge for capturing logging from spring (using Jakarta Commons Logging)
     compile "org.apache.logging.log4j:log4j-jcl:$log4j_version"

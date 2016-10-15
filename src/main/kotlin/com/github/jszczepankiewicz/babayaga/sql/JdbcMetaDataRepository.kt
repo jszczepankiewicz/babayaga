@@ -1,9 +1,7 @@
 package com.github.jszczepankiewicz.babayaga.sql
 
-import org.apache.logging.log4j.LogManager
 import org.springframework.stereotype.Repository
 import java.sql.Connection
-import java.sql.DatabaseMetaData
 import java.sql.DatabaseMetaData.typeNoNulls
 import java.sql.ResultSet
 import javax.sql.DataSource
@@ -15,15 +13,9 @@ import javax.sql.DataSource
  * @author jszczepankiewicz
  */
 @Repository
-class JdbcMetaDataRepository(var dataSource: DataSource) {
-
-    private val LOG = LogManager.getLogger(this.javaClass.name)
+class JdbcMetaDataRepository(val dataSource: DataSource) {
 
     fun tableExists(name: String): Boolean {
-
-        if(name == null){
-            throw NullPointerException("Table name can not be null")
-        }
 
         var connection: Connection? = null
         var results: ResultSet? = null
@@ -36,14 +28,8 @@ class JdbcMetaDataRepository(var dataSource: DataSource) {
             }
             return false
         } finally {
-
-            if (results != null && !results.isClosed) {
-                results.close()
-            }
-
-            if (connection != null) {
-                connection.close()
-            }
+            results?.close()
+            connection?.close()
         }
     }
 
@@ -52,7 +38,7 @@ class JdbcMetaDataRepository(var dataSource: DataSource) {
      */
     fun getColumns(tableName: String): Array<JdbcColumn> {
 
-        if(!tableExists(tableName)){
+        if (!tableExists(tableName)) {
             throw IllegalArgumentException("Can not retrieve information about columns on non-existing table: %s".format(tableName))
         }
 
@@ -68,7 +54,7 @@ class JdbcMetaDataRepository(var dataSource: DataSource) {
                 columns.add(JdbcColumn(
                         name = rs.getString("COLUMN_NAME"),
                         ordinalPosition = rs.getInt("ORDINAL_POSITION"),
-                        isNullable = rs.getInt("NULLABLE") != typeNoNulls,  //  flaten 3state into 2state but enough for our tests
+                        isNullable = rs.getInt("NULLABLE") != typeNoNulls, //  flatten 3state into 2state but enough for our tests
                         type = rs.getString("TYPE_NAME")
                 ))
             }
@@ -76,13 +62,8 @@ class JdbcMetaDataRepository(var dataSource: DataSource) {
             columns.sortBy { it.ordinalPosition }
             return columns.toTypedArray()
         } finally {
-            if (rs != null && !rs.isClosed) {
-                rs.close()
-            }
-
-            if (connection != null) {
-                connection.close()
-            }
+            rs?.close()
+            connection?.close()
         }
     }
 }

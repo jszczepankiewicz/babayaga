@@ -17,6 +17,8 @@
     <orderEntry type="library" name="Gradle: org.springframework:spring-jdbc:4.3.2.RELEASE" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-api:2.6.2" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-core:2.6.2" level="project" />
+    <orderEntry type="library" name="Gradle: com.lmax:disruptor:3.3.5" level="project" />
+    <orderEntry type="library" name="Gradle: org.msgpack:msgpack-core:0.8.11" level="project" />
     <orderEntry type="library" name="Gradle: org.apache.logging.log4j:log4j-jcl:2.6.2" level="project" />
     <orderEntry type="library" name="Gradle: org.postgresql:postgresql:9.4.1209.jre7" level="project" />
     <orderEntry type="library" name="Gradle: org.jetbrains.kotlin:kotlin-runtime:1.0.3" level="project" />
