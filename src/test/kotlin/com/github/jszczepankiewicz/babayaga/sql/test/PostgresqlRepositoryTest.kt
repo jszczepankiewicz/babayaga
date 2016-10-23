@@ -5,9 +5,7 @@ import com.github.jszczepankiewicz.babayaga.sql.Entity
 import com.github.jszczepankiewicz.babayaga.sql.JdbcColumn
 import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
 import com.github.jszczepankiewicz.babayaga.sql.PostgresqlRepository
-import org.apache.logging.log4j.LogManager.getLogger
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,9 +14,9 @@ import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.time.LocalDateTime.now
+import java.time.LocalDateTime.parse
 import java.util.*
 import java.util.UUID.randomUUID
-import kotlin.text.Charsets.UTF_8
 
 
 /**
@@ -32,8 +30,9 @@ import kotlin.text.Charsets.UTF_8
 @Sql(scripts = arrayOf("/test-before-ddl.sql", "/ddl-postgresql.sql", "/test-after-ddl.sql"))
 class PostgresqlRepositoryTest {
 
-    val existingEntityPK:Long = 99999
-    val existingEntityUUID:UUID = UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+    val existingEntityPK: Long = 99999
+    val existingEntityUUID: UUID = UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11")
+    val nonExistingEntityUUID: UUID = UUID.fromString("aaaaaaaa-9c0b-4ef8-bb6d-6bb9bd380a11")
 
     @Autowired
     lateinit var repository: PostgresqlRepository
@@ -57,20 +56,42 @@ class PostgresqlRepositoryTest {
         assertThat(columns[1]).isEqualTo(JdbcColumn(name = "entity_id", type = "bytea", isNullable = false, ordinalPosition = 2))
     }
 
-    @Ignore("unimplemented")
-    @Test
-    fun updateExistingEntity(){
 
-        val retrieved = repository.getByPk(existingEntityPK)   //  inserted by test-after-ddl.sql in Before
+    @Test
+    fun deleteNonExistingEntity() {
+
+        //  when
+        val deleted = repository.deleteEntity(nonExistingEntityUUID)
 
         //  then
+        assertThat(deleted).isFalse()
+    }
+
+    @Test
+    fun deleteExistingEntity() {
+
+        //  when
+        val deleted = repository.deleteEntity(existingEntityUUID)
+
+        //  then
+        assertThat(deleted).isTrue()
+    }
+
+    @Test
+    fun updateExistingEntity() {
+
+        //  given
+        val entity = Entity(id = existingEntityUUID, body = ByteArray(100), updated = parse("2034-12-19T10:23:54"), refKey = null)
+
+        //  when
+        repository.updateEntity(entity)
+
+        //  then
+        val retrieved = repository.getById(existingEntityUUID)
         assertThat(retrieved).isNotNull()
-        assertThat(retrieved!!.id).isEqualTo(UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"))
-        assertThat(retrieved.refKey).isEqualTo(existingEntityPK)
-        assertThat(retrieved.updated).isEqualTo("2004-10-19T10:23:54")
-        assertThat(retrieved.body).isEqualTo("isBabaYagaTheUgliest:true".toByteArray(Charsets.US_ASCII))
-
-
+        assertThat(retrieved!!.refKey).isEqualTo(existingEntityPK)
+        assertThat(retrieved.updated).isEqualTo("2034-12-19T10:23:54")
+        assertThat(retrieved.body).isEqualTo(ByteArray(100))
     }
 
     @Test
@@ -86,7 +107,7 @@ class PostgresqlRepositoryTest {
     }
 
     @Test
-    fun getExistingEntityById(){
+    fun getExistingEntityById() {
         //  when
         val retrieved = repository.getById(existingEntityUUID)   //  inserted by test-after-ddl.sql in Before
 
@@ -99,7 +120,7 @@ class PostgresqlRepositoryTest {
     }
 
     @Test
-    fun getExistingEntityByPk(){
+    fun getExistingEntityByPk() {
 
         //  when
         val retrieved = repository.getByPk(existingEntityPK)   //  inserted by test-after-ddl.sql in Before
@@ -113,7 +134,7 @@ class PostgresqlRepositoryTest {
     }
 
     @Test
-    fun getNullForRetrievalOfNonExistingEntityByPK(){
+    fun getNullForRetrievalOfNonExistingEntityByPK() {
 
         //  when
         val retrieved = repository.getByPk(Long.MAX_VALUE)

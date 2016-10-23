@@ -8,5 +8,5 @@ package com.github.jszczepankiewicz.babayaga
  */
 interface Transporter {
     fun decode(bytes: ByteArray): Map<String, Any?>
-    fun encode(entity: Map<String, Any?>): ByteArray
+    fun encode(entity: Map<String, Any?>, excluded:Set<String>): ByteArray
 }

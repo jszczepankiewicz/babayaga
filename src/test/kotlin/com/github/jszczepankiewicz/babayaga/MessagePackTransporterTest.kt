@@ -30,20 +30,60 @@ class MessagePackTransporterTest {
             101, 100, 70, 105, 101, 108, 100, -64)
 
     @Test
+    fun excludeSpecialFieldsFromEncoding() {
+
+        //  given
+        val excluded = setOf("shortMin", "doubleMax")
+
+        //  when
+        val encoded = transporter.encode(entity, excluded)
+        val deserialized = transporter.decode(encoded)
+
+        //  then
+        assertThat(encoded).isNotEqualTo(entityEncoded)
+        assertThat(deserialized).doesNotContainKeys("shortMin", "doubleMax").hasSize(14)
+        assertThat(deserialized["boolFalse"]).isEqualTo(false)
+        assertThat(deserialized["boolTrue"]).isEqualTo(true)
+        assertThat(deserialized["nulledField"]).isNull()
+        assertThat(deserialized).containsKey("nulledField")
+        assertThat(deserialized["someString"]).isEqualTo("someStringValue")
+
+        //  potentially lossy assertions
+        assertThat(deserialized["byteMin"]).isEqualTo(Byte.MIN_VALUE)
+        assertThat(deserialized["byteMax"]).isEqualTo(Byte.MAX_VALUE)
+
+        assertThat(deserialized["shortMax"]).isEqualTo(Short.MAX_VALUE)
+
+        assertThat(deserialized["integerMin"]).isEqualTo(Integer.MIN_VALUE)
+        assertThat(deserialized["integerMax"]).isEqualTo(Integer.MAX_VALUE)
+
+        assertThat(deserialized["longMin"]).isEqualTo(Long.MIN_VALUE)
+        assertThat(deserialized["longMax"]).isEqualTo(Long.MAX_VALUE)
+
+        assertThat(deserialized["floatMin"]).isEqualTo(Float.MIN_VALUE)
+        assertThat(deserialized["floatMax"]).isEqualTo(Float.MAX_VALUE)
+
+        assertThat(deserialized["doubleMin"]).isEqualTo(Double.MIN_VALUE)
+
+
+    }
+
+
+    @Test
     fun encodeEmptyMap() {
 
         //  given
         val from = emptyMap<String, Any?>()
 
         //  when
-        val encoded = transporter.encode(from)
+        val encoded = transporter.encode(from, emptySet())
 
         //  then
         assertThat(encoded).isEmpty()
     }
 
     @Test
-    fun decodeEmptyMap(){
+    fun decodeEmptyMap() {
 
         //  given
         val from = ByteArray(0)
@@ -102,7 +142,7 @@ class MessagePackTransporterTest {
         val entity = entity
 
         //  when
-        val compressed = transporter.encode(entity)
+        val compressed = transporter.encode(entity, emptySet())
 
         //  then
         assertThat(compressed).isNotNull().isEqualTo(entityEncoded)

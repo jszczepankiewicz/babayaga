@@ -5,6 +5,7 @@ buildscript {
     ext.kotlin_version = '1.0.3'
     ext.spring_version = '4.3.2.RELEASE'
     ext.log4j_version = '2.6.2'
+    ext.aspen_version = '2.0.0'
 
     repositories {
         mavenCentral()
@@ -49,4 +50,6 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     testCompile 'org.assertj:assertj-core:3.5.2'
     testCompile "org.springframework:spring-test:$spring_version"
+    testCompile "io.damo.aspen:aspen:$aspen_version"
+    testCompile "io.damo.aspen:aspen-spring:$aspen_version"
 }

@@ -1,0 +1,9 @@
+TODO:
+1. SQL layer
+- insertIndex(indexName, entityId, entity)
+- updateIndex(indexName, entityId, entity)
+- updateEntity(entity)
+
+2. EntityService
+- putEntity
+-

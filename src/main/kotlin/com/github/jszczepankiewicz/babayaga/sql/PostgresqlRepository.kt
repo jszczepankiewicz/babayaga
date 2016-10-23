@@ -12,7 +12,6 @@ import java.util.*
 import javax.sql.DataSource
 
 /**
- * TODO: replace to use PreparedStatements
  *
  * @since 2016-09-06
  * @author jszczepankiewicz
@@ -29,7 +28,7 @@ class PostgresqlRepository(val dataSource: DataSource) {
         LOG.info("PostgresqlRepository initialized")
     }
 
-    fun getById(id:UUID):Entity?{
+    fun getById(id: UUID): Entity? {
 
         LOG.debug("getById {}", id)
 
@@ -89,9 +88,48 @@ class PostgresqlRepository(val dataSource: DataSource) {
         LOG.info("Created index table index_{}", attributeName)
     }
 
-    fun updateEntity(entity:Entity){
+    fun updateEntity(entity: Entity) {
+
         LOG.debug("Update {}", entity.id)
-        throw UnsupportedOperationException("Unimplemented")
+
+        var insert: PreparedStatement? = null
+        var conn: Connection? = null
+
+        try {
+            val query = "UPDATE entities SET updated=?, body=? WHERE id=?"
+            conn = dataSource.connection
+            insert = conn.prepareStatement(query)
+
+            insert.setTimestamp(1, Timestamp.valueOf(entity.updated))
+            insert.setBinaryStream(2, entity.body.inputStream())
+            insert.setObject(3, entity.id)
+            insert.executeUpdate()
+
+        } finally {
+            insert?.close()
+            conn?.close()
+        }
+    }
+
+    fun deleteEntity(id: UUID): Boolean {
+        LOG.debug("Delete {}", id)
+        var delete: PreparedStatement? = null
+        var conn: Connection? = null
+        try {
+            val query = "DELETE FROM entities WHERE id=?"
+            conn = dataSource.connection
+            delete = conn.prepareStatement(query)
+            delete.setObject(1, id)
+            val results = delete.executeUpdate()
+            if (results == 0) {
+                return false
+            }
+
+            return true
+        } finally {
+            delete?.close()
+            conn?.close()
+        }
     }
 
     /**
@@ -127,16 +165,6 @@ class PostgresqlRepository(val dataSource: DataSource) {
 
         LOG.debug("Put {} at {}", entity.id, key)
         return key
-    }
-
-
-
-    fun putIndexEntry(indexName: String, indexId: String, entityId: String) {
-        //  implement me
-    }
-
-    fun dropIndexTable(attributeName: String) {
-        //  implement me
     }
 
     fun map(rs: ResultSet): Entity {

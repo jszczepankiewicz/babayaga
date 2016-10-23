@@ -22,3 +22,9 @@ PoC to create schemaless document storage in Kotlin on top of RDBMS heavily nspi
 https://github.com/jamesgolick/friendly#readme
 https://github.com/eklitzke/schemaless
 
+#### Planned versions
+A. one version / tuple per id in entities table, same entry updated multiple times. Possible race conditions
+A-bis. transform to use ActiveRecord but avoid beginner DDD traps (factories?) http://mortslikeus.blogspot.com/2009/01/active-record-and-ddd.html
+B. multiple versions / tuples per id in entities table. Each item maybe filled only once. Minimize (eliminate?) race conditions
+C. One entry may be scattered per mutliple entries. 
+

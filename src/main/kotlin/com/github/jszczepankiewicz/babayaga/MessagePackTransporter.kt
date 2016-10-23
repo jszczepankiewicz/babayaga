@@ -5,23 +5,29 @@ import org.msgpack.core.MessageFormat.FLOAT64
 import org.msgpack.core.MessagePack.newDefaultBufferPacker
 import org.msgpack.core.MessagePack.newDefaultUnpacker
 import org.msgpack.value.ValueType.*
+import org.springframework.stereotype.Component
 
 /**
  * (De)serialization of dictionary maps from/to binary buffer using messagepack.org library. Please note that using
- * this transport some values (integers, floats) will be downgraded if they are in range of "lower" type i.e.
- * (Integer) of value 1 after serialization -> deserialization will be converted to (Byte) of value 1. This is per
+ * this transport some values (integers, floats) might be downgraded if they are in range of "lower" type i.e.
+ * (Integer) of value 1 after serialization -> deserialization might be converted to (Byte) of value 1. This is per
  * design to minimize memory consumption (TO BE IMPLEMENTED)
  *
  * @since 2016-10-05
  * @author jszczepankiewicz
  */
+@Component
 class MessagePackTransporter : Transporter {
 
-    override fun encode(entity: Map<String, Any?>): ByteArray {
+    override fun encode(entity: Map<String, Any?>, excluded: Set<String>): ByteArray {
 
         val packer = newDefaultBufferPacker()
 
         for ((key, value) in entity) {
+
+            if (excluded.contains(key)) {
+                continue
+            }
 
             packer.packString(key)
 
