@@ -1,7 +1,6 @@
 package com.github.jszczepankiewicz.babayaga.sql
 
 import org.apache.logging.log4j.LogManager.getLogger
-import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
 import java.sql.Connection
 import java.sql.Statement
@@ -15,13 +14,6 @@ import javax.sql.DataSource
 class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
 
     private val LOG = getLogger()
-
-    private var sql: JdbcTemplate
-
-    init {
-        sql = JdbcTemplate(dataSource)
-        LOG.info("IndexRepository initialized")
-    }
 
     /**
      * Index table name builder. It builds the table name by default from "index_{entityName}_on_{nameOfColumn...n}.
@@ -99,6 +91,7 @@ class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
             conn?.close()
         }
 
+        LOG.info("Index table {} created", tableName)
         return tableName
     }
 

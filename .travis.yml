@@ -11,6 +11,8 @@ before_install:
 # need to create our test database
 before_script:
   - psql -c 'create database babayaga_tst;' -U postgres
+  - psql -U postgres -c "CREATE USER test WITH PASSWORD 'test';"
+  - psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE babayaga_tst to test;"
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/

@@ -26,8 +26,8 @@ open class JdbcDataSourceConfig {
 
         val ds = HikariDataSource()
         ds.jdbcUrl = "jdbc:postgresql:babayaga_tst"
-        ds.username = "postgres"
-        ds.password = "postgres"
+        ds.username = "test"
+        ds.password = "test"
 
         return ds
     }
