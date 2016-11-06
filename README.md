@@ -1,4 +1,5 @@
 # BabaYaga
+[![Build Status](https://travis-ci.org/jszczepankiewicz/babayaga.svg?branch=master)](https://travis-ci.org/jszczepankiewicz/babayaga)
 
 PoC to create schemaless document storage in Kotlin on top of RDBMS heavily nspired by:
 
