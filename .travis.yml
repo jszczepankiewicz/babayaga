@@ -5,7 +5,7 @@ jdk:
 services:
   - postgresql
 addons:
-    postgresql: "9.5"
+    postgresql: "9.4"
 # needed for postgresql
 sudo: required
 before_install:
