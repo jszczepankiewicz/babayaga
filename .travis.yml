@@ -8,6 +8,9 @@ sudo: required
 before_install:
 # fixes gradlew requirements
    - chmod +x gradlew
+# need to create our test database
+before_script:
+  - psql -c 'create database babayaga_tst;' -U postgres
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
   - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
