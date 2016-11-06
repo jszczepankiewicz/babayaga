@@ -4,6 +4,8 @@ jdk:
   - oraclejdk8
 services:
   - postgresql
+addons:
+    postgresql: "9.5"
 # needed for postgresql
 sudo: required
 before_install:
