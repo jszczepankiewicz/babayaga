@@ -3,7 +3,10 @@ jdk:
   - oraclejdk8
 services:
   - postgresql
+# needed for postgresql
+sudo: required
 before_install:
+# fixes gradlew requirements
    - chmod +x gradlew
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
