@@ -1,9 +1,8 @@
 TODO:
-1. SQL layer
-- insertIndex(indexName, entityId, entity)
-- updateIndex(indexName, entityId, entity)
-- updateEntity(entity)
-
-2. EntityService
-- putEntity
--
+- drop index tables
+- insert into index (n-columns)
+- insert into index in batches
+- delete from index
+- review entity operations (should be not in one entities table but scattered through different entities table)
+- findFirst
+- findAll

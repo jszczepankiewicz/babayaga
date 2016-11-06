@@ -17,7 +17,7 @@ import javax.sql.DataSource
  * @author jszczepankiewicz
  */
 @Repository
-class PostgresqlRepository(val dataSource: DataSource) {
+class EntitiesRepository(val dataSource: DataSource) {
 
     private val LOG = getLogger()
 
@@ -72,20 +72,6 @@ class PostgresqlRepository(val dataSource: DataSource) {
             get?.close()
             conn?.close()
         }
-    }
-
-    /**
-     * Create index table which will have following schema:
-     * table name: index_attributeName
-     * column 1: attributeName_id
-     * column 2: entity_id
-     * PK(attributeName_id, entity_id)
-     */
-    fun createIndexTable(attributeName: String) {
-        LOG.debug("Creating index table index_{}", attributeName)
-        sql.execute("CREATE TABLE index_%s (%s BYTEA NOT NULL, entity_id BYTEA NOT NULL UNIQUE, PRIMARY KEY(%s, entity_id))".format(
-                attributeName, attributeName, attributeName))
-        LOG.info("Created index table index_{}", attributeName)
     }
 
     fun updateEntity(entity: Entity) {

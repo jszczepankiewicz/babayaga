@@ -1,7 +1,7 @@
 package com.github.jszczepankiewicz.babayaga
 
+import com.github.jszczepankiewicz.babayaga.sql.EntitiesRepository
 import com.github.jszczepankiewicz.babayaga.sql.Entity
-import com.github.jszczepankiewicz.babayaga.sql.PostgresqlRepository
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.LocalDateTime.now
@@ -13,7 +13,7 @@ import java.util.UUID.randomUUID
  * @author jszczepankiewicz
  */
 @Service
-class Storage(val repository: PostgresqlRepository, val transporter: Transporter) {
+class Storage(val repository: EntitiesRepository, val transporter: Transporter) {
 
     val id = "id"
     val updated = "updated"
