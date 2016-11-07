@@ -1,13 +1,17 @@
+# needed for postgresql 9.5 which currently works only on trusty
+dist: trusty
+sudo: required
+
+# some interesting discussion about Postgresql 9.5 on travis (required by babayaga) https://github.com/travis-ci/travis-ci/issues/4264
 language: java
-script: ./gradlew check --stacktrace --info
+script: ./gradlew check --info
 jdk:
   - oraclejdk8
 services:
   - postgresql
 addons:
-    postgresql: "9.4"
-# needed for postgresql
-sudo: required
+    postgresql: "9.5"
+
 before_install:
 # fixes gradlew requirements
    - chmod +x gradlew

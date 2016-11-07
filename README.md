@@ -17,6 +17,9 @@ PoC to create schemaless document storage in Kotlin on top of RDBMS heavily nspi
 2. For higher level tests Aspen chosen, rejected Spek as 1.0 (Spek) does not support Spring JUnit runner (https://github.com/JetBrains/spek/issues/50). 
 
 #### Architecture decisions
+##### Supported RDBMS
+Currently only Postgresql version 9.5 is supported. It should be possible in future to add support for other engines. 
+
 ##### (De)serialization framework
 For (de)serialization http://msgpack.org/ was chosen. One of nice bug(feature) is lossless compression of integer values to lower representation if fits into lower range (i.e. long might be stored in byte). As it is not planned to have interchange with outside world it is possible to replace with some even more space friendly solution. Further compression on binary representation is planned (LZ4 probably).
 
