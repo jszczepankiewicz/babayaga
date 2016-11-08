@@ -14,6 +14,8 @@ interface DBDialect {
 
     fun buildCreateIndexTableDDL(tableName: String, columns: List<Pair<String, ColumnType>>): String
 
+    fun buildCreateEntityTableDDL(entityName:String):String
+
     /**
      * Maximum size of supported table name. For Oracle usually 30 characters, 63 for Postgresql. Used in contexts
      * that require building label names for tables where generated dynamically has to be compliant with RDBMS limits.

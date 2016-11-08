@@ -1,10 +1,7 @@
 package com.github.jszczepankiewicz.babayaga.sql.test
 
 import com.github.jszczepankiewicz.babayaga.config.JdbcDataSourceConfig
-import com.github.jszczepankiewicz.babayaga.sql.Entity
-import com.github.jszczepankiewicz.babayaga.sql.JdbcColumn
-import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
-import com.github.jszczepankiewicz.babayaga.sql.EntitiesRepository
+import com.github.jszczepankiewicz.babayaga.sql.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -25,7 +22,7 @@ import java.util.UUID.randomUUID
  * @since 2016-09-06
  */
 @RunWith(SpringJUnit4ClassRunner::class)
-@ContextConfiguration(classes = arrayOf(JdbcDataSourceConfig::class, EntitiesRepository::class, JdbcMetaDataRepository::class))
+@ContextConfiguration(classes = arrayOf(JdbcDataSourceConfig::class, EntitiesRepository::class, JdbcMetaDataRepository::class, PostgresqlDBDialect::class))
 @TestPropertySource("/db-test.properties")
 @Sql(scripts = arrayOf("/test-before-ddl.sql", "/ddl-postgresql.sql", "/test-after-ddl.sql"))
 class EntitiesRepositoryTest {

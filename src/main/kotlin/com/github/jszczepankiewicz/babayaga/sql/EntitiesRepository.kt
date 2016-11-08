@@ -3,11 +3,8 @@ package com.github.jszczepankiewicz.babayaga.sql
 import org.apache.logging.log4j.LogManager.getLogger
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Repository
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.ResultSet
+import java.sql.*
 import java.sql.Statement.RETURN_GENERATED_KEYS
-import java.sql.Timestamp
 import java.util.*
 import javax.sql.DataSource
 
@@ -17,7 +14,7 @@ import javax.sql.DataSource
  * @author jszczepankiewicz
  */
 @Repository
-class EntitiesRepository(val dataSource: DataSource) {
+class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
 
     private val LOG = getLogger()
 
@@ -26,6 +23,36 @@ class EntitiesRepository(val dataSource: DataSource) {
     init {
         sql = JdbcTemplate(dataSource)
         LOG.info("PostgresqlRepository initialized")
+    }
+
+    /**
+     * Creates standard entities table
+     *
+     * @return entity table name
+     */
+    fun createEntityTable(entityName:String):String{
+
+        if(entityName.trim().length==0){
+            throw IllegalArgumentException("Can not create entity name, entityName should not be empty")
+        }
+
+        val tableName = entityName.trim().toLowerCase()
+        val ddl = dbDialect.buildCreateEntityTableDDL(tableName)
+        var insert: Statement? = null
+        var conn: Connection? = null
+
+        try {
+            conn = dataSource.connection
+            insert = conn.prepareStatement(ddl)
+            insert.executeUpdate()
+
+        } finally {
+            insert?.close()
+            conn?.close()
+        }
+
+        LOG.info("Entity table {} created", tableName)
+        return tableName
     }
 
     fun getById(id: UUID): Entity? {

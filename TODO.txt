@@ -1,4 +1,5 @@
 TODO:
+- create entity table
 - drop index tables
 - insert into index (n-columns)
 - insert into index in batches

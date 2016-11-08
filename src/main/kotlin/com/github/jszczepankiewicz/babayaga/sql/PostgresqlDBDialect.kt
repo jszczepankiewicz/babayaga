@@ -49,4 +49,11 @@ class PostgresqlDBDialect : DBDialect {
         LOG.debug("Index ddl:\n\t{}", retval)
         return retval
     }
+
+    override fun buildCreateEntityTableDDL(entityName: String): String {
+        return ("CREATE TABLE IF NOT EXISTS %s(added_id SERIAL NOT NULL PRIMARY KEY," +
+                "id UUID NOT NULL UNIQUE," +
+                "updated TIMESTAMP WITHOUT TIME ZONE NOT NULL," +
+                "body BYTEA)").format(entityName)
+    }
 }

@@ -5,6 +5,7 @@ import com.github.jszczepankiewicz.babayaga.Storage
 import com.github.jszczepankiewicz.babayaga.config.JdbcDataSourceConfig
 import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
 import com.github.jszczepankiewicz.babayaga.sql.EntitiesRepository
+import com.github.jszczepankiewicz.babayaga.sql.PostgresqlDBDialect
 import io.damo.aspen.Test
 import io.damo.aspen.expectException
 import io.damo.aspen.spring.SpringTestTreeRunner
@@ -25,7 +26,7 @@ import java.util.UUID.randomUUID
  * @since 2016-10-17
  */
 @RunWith(SpringTestTreeRunner::class)
-@ContextConfiguration(classes = arrayOf(JdbcDataSourceConfig::class, EntitiesRepository::class, JdbcMetaDataRepository::class, Storage::class, MessagePackTransporter::class))
+@ContextConfiguration(classes = arrayOf(PostgresqlDBDialect::class, JdbcDataSourceConfig::class, EntitiesRepository::class, JdbcMetaDataRepository::class, Storage::class, MessagePackTransporter::class))
 @TestPropertySource("/db-test.properties")
 @Sql(scripts = arrayOf("/test-before-ddl.sql", "/ddl-postgresql.sql", "/test-after-ddl.sql"))
 class BasicEntityLifecycleSpec : Test({

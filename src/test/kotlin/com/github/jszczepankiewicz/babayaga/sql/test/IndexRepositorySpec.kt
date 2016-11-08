@@ -41,9 +41,9 @@ class IndexRepositorySpec : Test({
 
             val columns = metaRepo.getColumns(indexTable)
 
-            assertThat(columns).hasSize(2)
-            assertThat(columns[0]).isEqualTo(JdbcColumn(name = "name", type = "text", isNullable = false, ordinalPosition = 1))
-            assertThat(columns[1]).isEqualTo(JdbcColumn(name = "id", type = "bytea", isNullable = false, ordinalPosition = 2))
+            assertThat(columns).containsExactly(
+                    JdbcColumn(name = "name", type = "text", isNullable = false, ordinalPosition = 1),
+                    JdbcColumn(name = "id", type = "bytea", isNullable = false, ordinalPosition = 2))
 
         }
         test("supports multiple column index") {
@@ -51,12 +51,12 @@ class IndexRepositorySpec : Test({
 
             val columns = metaRepo.getColumns(indexTable)
 
-            assertThat(columns).hasSize(5)
-            assertThat(columns[0]).isEqualTo(JdbcColumn(name = "name", type = "text", isNullable = false, ordinalPosition = 1))
-            assertThat(columns[1]).isEqualTo(JdbcColumn(name = "born", type = "timestamp", isNullable = false, ordinalPosition = 2))
-            assertThat(columns[2]).isEqualTo(JdbcColumn(name = "married", type = "bool", isNullable = false, ordinalPosition = 3))
-            assertThat(columns[3]).isEqualTo(JdbcColumn(name = "picture", type = "bytea", isNullable = false, ordinalPosition = 4))
-            assertThat(columns[4]).isEqualTo(JdbcColumn(name = "id", type = "bytea", isNullable = false, ordinalPosition = 5))
+            assertThat(columns).containsExactly(
+                    JdbcColumn(name = "name", type = "text", isNullable = false, ordinalPosition = 1),
+                    JdbcColumn(name = "born", type = "timestamp", isNullable = false, ordinalPosition = 2),
+                    JdbcColumn(name = "married", type = "bool", isNullable = false, ordinalPosition = 3),
+                    JdbcColumn(name = "picture", type = "bytea", isNullable = false, ordinalPosition = 4),
+                    JdbcColumn(name = "id", type = "bytea", isNullable = false, ordinalPosition = 5))
         }
     }
     describe("When resolve index table name") {
