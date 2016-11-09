@@ -32,6 +32,9 @@ import java.util.UUID.randomUUID
 class BasicEntityLifecycleSpec : Test({
 
     val storage: Storage = inject(Storage::class)
+    val entityRepo:EntitiesRepository = inject(EntitiesRepository::class)
+
+    val veryFamousArtists = "VeryFamousArtists"
 
     val person = mapOf(
             "firstName" to "John",
@@ -39,12 +42,14 @@ class BasicEntityLifecycleSpec : Test({
             "married" to true
     )
 
-    val stored: Map<String, Any?> = storage.put(person)
+    var stored: Map<String, Any?>
 
     var mutablePerson: HashMap<String, Any?> = HashMap(person)
 
     before {
+        entityRepo.createEntityTable(veryFamousArtists)
         mutablePerson = HashMap(person)
+        stored = storage.put(veryFamousArtists, person)
     }
 
     describe("When put entity") {
@@ -52,14 +57,14 @@ class BasicEntityLifecycleSpec : Test({
         test("should throw IAE when id field present without updated") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - id field present without updated") {
                 mutablePerson.put("id", randomUUID())
-                storage.put(mutablePerson)
+                storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
         test("should throw IAE when updated field present without id") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - updated field present without id") {
                 mutablePerson.put("updated", now())
-                storage.put(mutablePerson)
+                storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
@@ -67,7 +72,7 @@ class BasicEntityLifecycleSpec : Test({
             expectException(IllegalArgumentException::class, "Inconsistent entity - id field present with updated empty") {
                 mutablePerson.put("updated", null)
                 mutablePerson.put("id", randomUUID())
-                storage.put(mutablePerson)
+                storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
@@ -75,7 +80,7 @@ class BasicEntityLifecycleSpec : Test({
             expectException(IllegalArgumentException::class, "Inconsistent entity - updated field present with id empty") {
                 mutablePerson.put("updated", now())
                 mutablePerson.put("id", null)
-                storage.put(mutablePerson)
+                storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
@@ -83,7 +88,7 @@ class BasicEntityLifecycleSpec : Test({
             expectException(IllegalArgumentException::class, "Inconsistent entity - id field is not UUID") {
                 mutablePerson.put("updated", now())
                 mutablePerson.put("id", "somethingElseThanUUID")
-                storage.put(mutablePerson)
+                storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
@@ -91,7 +96,7 @@ class BasicEntityLifecycleSpec : Test({
             expectException(IllegalArgumentException::class, "Inconsistent entity - updated field is not LocalDateTime") {
                 mutablePerson.put("updated", "inThePast")
                 mutablePerson.put("id", randomUUID())
-                storage.put(mutablePerson)
+                storage.put(veryFamousArtists, mutablePerson)
             }
         }
     }
@@ -99,21 +104,22 @@ class BasicEntityLifecycleSpec : Test({
     describe("When insert entity") {
 
         test("should return map with non-modified original fields") {
-
-            assertThat(stored["firstName"]).isEqualTo("John")
+            stored = storage.put(veryFamousArtists, person)
+            assertThat(stored!!["firstName"]).isEqualTo("John")
             assertThat(stored["age"]).isEqualTo(31)
             assertThat(stored["married"]).isEqualTo(true)
         }
 
         test("should return object with id and updated initialized") {
+            stored = storage.put(veryFamousArtists, person)
             assertThat(stored["id"]).isNotNull().isInstanceOf(UUID::class.java)
             assertThat(stored["updated"]).isNotNull().isInstanceOf(LocalDateTime::class.java)
         }
     }
 
     describe("When retrieve inserted entity") {
-
-        val retrieved = storage.find(stored["id"] as UUID)
+        val stored = storage.put(veryFamousArtists, person)
+        val retrieved = storage.find(veryFamousArtists, stored["id"] as UUID)
 
         test("should retrieve non-modified fields") {
             assertThat(retrieved!!["firstName"]).isEqualTo("John")
@@ -128,15 +134,15 @@ class BasicEntityLifecycleSpec : Test({
     }
 
     describe("When update existing entity") {
-
-        val retrieved = storage.find(stored["id"] as UUID)
+        var stored: Map<String, Any?> = storage.put(veryFamousArtists, person)
+        val retrieved = storage.find(veryFamousArtists, stored["id"] as UUID)
         mutablePerson = HashMap(retrieved)
         mutablePerson.put("newField", "somethingCompletelyNew")
         mutablePerson.remove("married")
         mutablePerson.put("firstName", "JetztMainNameIsWurst")
 
-        val updated = storage.put(mutablePerson)
-        val updatedRetrieved = storage.find(updated["id"] as UUID)
+        val updated = storage.put(veryFamousArtists, mutablePerson)
+        val updatedRetrieved = storage.find(veryFamousArtists, updated["id"] as UUID)
 
         test("should return object with modified fields") {
             assertThat(updated["id"]).isInstanceOf(UUID::class.java).isEqualTo(stored["id"])

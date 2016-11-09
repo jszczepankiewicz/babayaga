@@ -25,6 +25,102 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         LOG.info("PostgresqlRepository initialized")
     }
 
+    fun updateEntity(entityName:String, entity: Entity) {
+
+        val tableName = getTableName(entityName)
+
+        LOG.debug("Update {}", entity.id)
+
+        var insert: PreparedStatement? = null
+        var conn: Connection? = null
+
+        try {
+            val query = "UPDATE %s SET updated=?, body=? WHERE id=?".format(tableName)
+            conn = dataSource.connection
+            insert = conn.prepareStatement(query)
+
+            insert.setTimestamp(1, Timestamp.valueOf(entity.updated))
+            insert.setBinaryStream(2, entity.body.inputStream())
+            insert.setObject(3, entity.id)
+            insert.executeUpdate()
+
+        } finally {
+            insert?.close()
+            conn?.close()
+        }
+    }
+
+    fun getById(entityName:String, id: UUID): Entity? {
+
+        val tableName = getTableName(entityName)
+
+        LOG.debug("getById {}.{}", entityName,id)
+
+        var get: PreparedStatement? = null
+        var conn: Connection? = null
+
+        try {
+            conn = dataSource.connection
+            get = conn.prepareStatement("SELECT * FROM %s WHERE id=?".format(tableName))
+            get.setObject(1, id)
+            val results = get.executeQuery()
+            var entity: Entity? = null
+            while (results.next()) {
+                entity = map(results)
+            }
+            return entity
+        } finally {
+            get?.close()
+            conn?.close()
+        }
+    }
+    /**
+     * Insert entity into given table
+     */
+    fun insertEntity(entityName:String, entity: Entity):Long{
+        val tableName = getTableName(entityName)
+
+        LOG.debug("Before inserting tuple of id {}", entity.id)
+        var insert: PreparedStatement? = null
+        var conn: Connection? = null
+        var key: Long = 0
+        try {
+            val query = "INSERT INTO %s(id, updated, body) VALUES (?,?,?)".format(tableName)
+            conn = dataSource.connection
+            insert = conn.prepareStatement(query, RETURN_GENERATED_KEYS)
+            insert.setObject(1, entity.id)
+            insert.setTimestamp(2, Timestamp.valueOf(entity.updated))
+            insert.setBinaryStream(3, entity.body.inputStream())
+            insert.executeUpdate()
+            val rs = insert.generatedKeys
+
+            if (rs.next()) {
+                key = rs.getLong(1)
+            }
+            if (key.equals(0)) {
+                throw IllegalStateException("No generated key info")
+            }
+        } finally {
+            insert?.close()
+            conn?.close()
+        }
+
+        LOG.debug("Put {} at {}", entity.id, key)
+        return key
+    }
+
+    /**
+     * TODO: add cache
+     */
+    fun getTableName(entityName:String):String{
+
+        if(entityName.trim().length==0){
+            throw IllegalArgumentException("Can not resolve table name, entityName should not be empty")
+        }
+
+        return entityName.trim().toLowerCase()
+    }
+
     /**
      * Creates standard entities table
      *
@@ -32,11 +128,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
      */
     fun createEntityTable(entityName:String):String{
 
-        if(entityName.trim().length==0){
-            throw IllegalArgumentException("Can not create entity name, entityName should not be empty")
-        }
-
-        val tableName = entityName.trim().toLowerCase()
+        val tableName = getTableName(entityName)
         val ddl = dbDialect.buildCreateEntityTableDDL(tableName)
         var insert: Statement? = null
         var conn: Connection? = null
@@ -55,6 +147,10 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         return tableName
     }
 
+    /**
+     *
+     */
+    @Deprecated("old api")
     fun getById(id: UUID): Entity? {
 
         LOG.debug("getById {}", id)
@@ -78,6 +174,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         }
     }
 
+    @Deprecated("old api")
     fun getByPk(pk: Long): Entity? {
 
         LOG.debug("GetByPK {}", pk)
@@ -101,6 +198,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         }
     }
 
+    @Deprecated("old api")
     fun updateEntity(entity: Entity) {
 
         LOG.debug("Update {}", entity.id)
@@ -124,6 +222,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         }
     }
 
+    @Deprecated("old api")
     fun deleteEntity(id: UUID): Boolean {
         LOG.debug("Delete {}", id)
         var delete: PreparedStatement? = null
@@ -149,6 +248,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
      * Create entry in entities table returning native db pk. Please note this function does not replace existing
      * entries. Just put new version into entities table without doing anything related to indexes
      */
+    @Deprecated("old api")
     fun insertEntity(entity: Entity): Long {
 
         LOG.debug("Before inserting tuple of id {}", entity.id)

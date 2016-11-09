@@ -31,11 +31,12 @@ class EntitiesRepositorySpec : Test({
 
     val repo: EntitiesRepository = inject(EntitiesRepository::class)
     val metaRepo: JdbcMetaDataRepository = inject(JdbcMetaDataRepository::class)
+    val veryFamousArtists = "VeryFamousArtists"
 
     describe("When create entities table") {
         test("create table in database") {
 
-            val table = repo.createEntityTable("veryFamousArtists")
+            val table = repo.createEntityTable(veryFamousArtists)
             val columns = metaRepo.getColumns(table)
 
             assertThat(table).isEqualTo("veryfamousartists")
@@ -46,9 +47,10 @@ class EntitiesRepositorySpec : Test({
                     JdbcColumn(name = "body", type = "bytea", isNullable = true, ordinalPosition = 4))
         }
         test("throw IAE when create entity table with empty entityName") {
-            expectException(IllegalArgumentException::class, "Can not create entity name, entityName should not be empty") {
+            expectException(IllegalArgumentException::class, "Can not resolve table name, entityName should not be empty") {
                 repo.createEntityTable(" ")
             }
         }
     }
+
 })

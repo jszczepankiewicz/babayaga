@@ -29,8 +29,6 @@ class PostgresqlDBDialect : DBDialect {
             TIMESTAMP_WITHOUT_TZ -> return columnName + " TIMESTAMP WITHOUT TIME ZONE" + notNull
             BINARY -> return columnName + " BYTEA" + notNull
         }
-
-        throw IllegalArgumentException("Unsupported ColumnType: " + column.second)
     }
 
     override fun buildCreateIndexTableDDL(tableName: String, columns: List<Pair<String, ColumnType>>): String {
