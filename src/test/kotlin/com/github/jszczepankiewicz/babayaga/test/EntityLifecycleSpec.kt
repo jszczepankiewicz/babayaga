@@ -3,82 +3,80 @@ package com.github.jszczepankiewicz.babayaga.test
 import com.github.jszczepankiewicz.babayaga.MessagePackTransporter
 import com.github.jszczepankiewicz.babayaga.Storage
 import com.github.jszczepankiewicz.babayaga.config.JdbcDataSourceConfig
-import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
 import com.github.jszczepankiewicz.babayaga.sql.EntitiesRepository
+import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
 import com.github.jszczepankiewicz.babayaga.sql.PostgresqlDBDialect
 import io.damo.aspen.Test
 import io.damo.aspen.expectException
 import io.damo.aspen.spring.SpringTestTreeRunner
 import io.damo.aspen.spring.inject
-import org.assertj.core.api.Assertions.assertThat
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.LogManager.getLogger
+import org.assertj.core.api.Assertions
 import org.junit.runner.RunWith
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.jdbc.Sql
 import java.time.LocalDateTime
-import java.time.LocalDateTime.now
 import java.util.*
-import java.util.UUID.randomUUID
 
 /**
+ * @since 2016-11-11
  * @author jszczepankiewicz
- * *
- * @since 2016-10-17
  */
 @RunWith(SpringTestTreeRunner::class)
-@ContextConfiguration(classes = arrayOf(PostgresqlDBDialect::class, JdbcDataSourceConfig::class, EntitiesRepository::class, JdbcMetaDataRepository::class, Storage::class, MessagePackTransporter::class))
+@ContextConfiguration(classes = arrayOf(EntitiesRepository::class, JdbcDataSourceConfig::class, MessagePackTransporter::class,
+        JdbcMetaDataRepository::class, PostgresqlDBDialect::class, JdbcMetaDataRepository::class, Storage::class))
 @TestPropertySource("/db-test.properties")
 @Sql(scripts = arrayOf("/test-before-ddl.sql", "/ddl-postgresql.sql", "/test-after-ddl.sql"))
-class BasicEntityLifecycleSpec : Test({
+class EntityLifecycleSpec : Test({
+
+    val LOG = getLogger()
 
     val storage: Storage = inject(Storage::class)
-    val entityRepo:EntitiesRepository = inject(EntitiesRepository::class)
+    val entityRepo: EntitiesRepository = inject(EntitiesRepository::class)
 
     val veryFamousArtists = "VeryFamousArtists"
-
     val person = mapOf(
             "firstName" to "John",
             "age" to 31,
-            "married" to true
-    )
-
-    var stored: Map<String, Any?>
-
-    var mutablePerson: HashMap<String, Any?> = HashMap(person)
-
-    before {
-        entityRepo.createEntityTable(veryFamousArtists)
-        mutablePerson = HashMap(person)
-        stored = storage.put(veryFamousArtists, person)
-    }
+            "married" to true)
 
     describe("When put entity") {
 
+        before {
+            entityRepo.createEntityTable(veryFamousArtists)
+        }
+
         test("should throw IAE when id field present without updated") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - id field present without updated") {
-                mutablePerson.put("id", randomUUID())
+                var mutablePerson = HashMap(person)
+                mutablePerson.put("id", UUID.randomUUID())
                 storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
         test("should throw IAE when updated field present without id") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - updated field present without id") {
-                mutablePerson.put("updated", now())
+                var mutablePerson = HashMap(person)
+                mutablePerson.put("updated", LocalDateTime.now())
                 storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
         test("should throw IAE when id field present with updated null") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - id field present with updated empty") {
+                var mutablePerson = HashMap(person)
                 mutablePerson.put("updated", null)
-                mutablePerson.put("id", randomUUID())
+                mutablePerson.put("id", UUID.randomUUID())
                 storage.put(veryFamousArtists, mutablePerson)
             }
         }
 
         test("should throw IAE when updated field present with id null") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - updated field present with id empty") {
-                mutablePerson.put("updated", now())
+                var mutablePerson = HashMap(person)
+                mutablePerson.put("updated", LocalDateTime.now())
                 mutablePerson.put("id", null)
                 storage.put(veryFamousArtists, mutablePerson)
             }
@@ -86,7 +84,8 @@ class BasicEntityLifecycleSpec : Test({
 
         test("should throw IAE when id field not UUID") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - id field is not UUID") {
-                mutablePerson.put("updated", now())
+                var mutablePerson = HashMap(person)
+                mutablePerson.put("updated", LocalDateTime.now())
                 mutablePerson.put("id", "somethingElseThanUUID")
                 storage.put(veryFamousArtists, mutablePerson)
             }
@@ -94,49 +93,63 @@ class BasicEntityLifecycleSpec : Test({
 
         test("should throw IAE when updated field not LocalDateTime") {
             expectException(IllegalArgumentException::class, "Inconsistent entity - updated field is not LocalDateTime") {
+                var mutablePerson = HashMap(person)
                 mutablePerson.put("updated", "inThePast")
-                mutablePerson.put("id", randomUUID())
+                mutablePerson.put("id", UUID.randomUUID())
                 storage.put(veryFamousArtists, mutablePerson)
             }
         }
     }
 
-    describe("When insert entity") {
+    describe("When successfully put new entity") {
+
+        before {
+            entityRepo.createEntityTable(veryFamousArtists)
+        }
 
         test("should return map with non-modified original fields") {
-            stored = storage.put(veryFamousArtists, person)
-            assertThat(stored!!["firstName"]).isEqualTo("John")
-            assertThat(stored["age"]).isEqualTo(31)
-            assertThat(stored["married"]).isEqualTo(true)
+            val stored = storage.put(veryFamousArtists, person)
+            Assertions.assertThat(stored!!["firstName"]).isEqualTo("John")
+            Assertions.assertThat(stored["age"]).isEqualTo(31)
+            Assertions.assertThat(stored["married"]).isEqualTo(true)
         }
 
         test("should return object with id and updated initialized") {
-            stored = storage.put(veryFamousArtists, person)
-            assertThat(stored["id"]).isNotNull().isInstanceOf(UUID::class.java)
-            assertThat(stored["updated"]).isNotNull().isInstanceOf(LocalDateTime::class.java)
+            val stored = storage.put(veryFamousArtists, person)
+            Assertions.assertThat(stored["id"]).isNotNull().isInstanceOf(UUID::class.java)
+            Assertions.assertThat(stored["updated"]).isNotNull().isInstanceOf(LocalDateTime::class.java)
         }
     }
 
     describe("When retrieve inserted entity") {
+
+        entityRepo.createEntityTable(veryFamousArtists)
+
         val stored = storage.put(veryFamousArtists, person)
         val retrieved = storage.find(veryFamousArtists, stored["id"] as UUID)
 
         test("should retrieve non-modified fields") {
-            assertThat(retrieved!!["firstName"]).isEqualTo("John")
-            assertThat(retrieved["age"]).isEqualTo(31.toByte()) //  numbers are lossless compressed
-            assertThat(retrieved["married"]).isEqualTo(true)
+            Assertions.assertThat(retrieved!!["firstName"]).isEqualTo("John")
+            Assertions.assertThat(retrieved["age"]).isEqualTo(31.toByte()) //  numbers are lossless compressed
+            Assertions.assertThat(retrieved["married"]).isEqualTo(true)
         }
 
         test("should retrieve id and updated initialized") {
-            assertThat(retrieved!!["id"]).isNotNull().isEqualTo(stored["id"] as UUID)
-            assertThat(retrieved["updated"]).isNotNull().isInstanceOf(LocalDateTime::class.java)
+            Assertions.assertThat(retrieved!!["id"]).isNotNull().isEqualTo(stored["id"] as UUID)
+            Assertions.assertThat(retrieved["updated"]).isNotNull().isInstanceOf(LocalDateTime::class.java)
         }
     }
 
     describe("When update existing entity") {
+
+        before {
+            entityRepo.createEntityTable(veryFamousArtists)
+        }
+
         var stored: Map<String, Any?> = storage.put(veryFamousArtists, person)
         val retrieved = storage.find(veryFamousArtists, stored["id"] as UUID)
-        mutablePerson = HashMap(retrieved)
+
+        var mutablePerson = HashMap(retrieved)
         mutablePerson.put("newField", "somethingCompletelyNew")
         mutablePerson.remove("married")
         mutablePerson.put("firstName", "JetztMainNameIsWurst")
@@ -145,23 +158,22 @@ class BasicEntityLifecycleSpec : Test({
         val updatedRetrieved = storage.find(veryFamousArtists, updated["id"] as UUID)
 
         test("should return object with modified fields") {
-            assertThat(updated["id"]).isInstanceOf(UUID::class.java).isEqualTo(stored["id"])
-            assertThat(updated["id"]).isEqualTo(stored["id"])
-            assertThat(updated["firstName"]).isEqualTo("JetztMainNameIsWurst")
-            assertThat(updated["newField"]).isEqualTo("somethingCompletelyNew")
-            assertThat(updated.containsKey("married")).isFalse()
-            assertThat(updated["age"]).isEqualTo(31.toByte())
-            assertThat(updated.size).isEqualTo(5) //    3 built-in + 2 meta
+            Assertions.assertThat(updated["id"]).isInstanceOf(UUID::class.java).isEqualTo(stored["id"])
+            Assertions.assertThat(updated["id"]).isEqualTo(stored["id"])
+            Assertions.assertThat(updated["firstName"]).isEqualTo("JetztMainNameIsWurst")
+            Assertions.assertThat(updated["newField"]).isEqualTo("somethingCompletelyNew")
+            Assertions.assertThat(updated.containsKey("married")).isFalse()
+            Assertions.assertThat(updated["age"]).isEqualTo(31.toByte())
+            Assertions.assertThat(updated.size).isEqualTo(5) //    3 built-in + 2 meta
         }
 
         test("should return object with timestamp updated") {
-            assertThat(updated["updated"]).isInstanceOf(LocalDateTime::class.java)
-            assertThat(updated["updated"]).isNotEqualTo(mutablePerson["updated"])
+            Assertions.assertThat(updated["updated"]).isInstanceOf(LocalDateTime::class.java)
+            Assertions.assertThat(updated["updated"]).isNotEqualTo(mutablePerson["updated"])
         }
 
         test("should retrieve object same as returned") {
-            assertThat(updatedRetrieved).isEqualTo(updated)
+            Assertions.assertThat(updatedRetrieved).isEqualTo(updated)
         }
     }
-
 })
