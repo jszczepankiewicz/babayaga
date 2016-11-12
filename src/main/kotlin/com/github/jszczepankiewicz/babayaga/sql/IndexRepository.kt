@@ -3,7 +3,9 @@ package com.github.jszczepankiewicz.babayaga.sql
 import org.apache.logging.log4j.LogManager.getLogger
 import org.springframework.stereotype.Repository
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.Statement
+import java.util.*
 import javax.sql.DataSource
 
 /**
@@ -99,7 +101,52 @@ class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         val tableName = resolveIndexTableName(entityName, columns)
     }
 
-    fun insertIndexValue(entityName: String, columns: List<Pair<String, ColumnType>>, entity: Map<String, Any?>) {
+    /**
+     * Retrieve values stored in index table which are assigned to given id. Although not used directly from client api
+     * usefull in low level index repository tests.
+     */
+    fun getIndexValuesById(entityName: String, columns: List<Pair<String, ColumnType>>, id: UUID): Map<String, Any?>? {
+
+        val tableName = resolveIndexTableName(entityName, columns)
+
+        var get: PreparedStatement? = null
+        var conn: Connection? = null
+
+        try {
+            conn = dataSource.connection
+            get = conn.prepareStatement("SELECT * FROM %s WHERE id=?".format(tableName))
+            get.setObject(1, id)
+            val results = get.executeQuery()
+            var entity: Map<String, Any?>? = null
+
+            while (results.next()) {
+
+                entity = HashMap()
+                entity.put("id", results.getObject("id") as UUID)
+                for ((column, type) in columns) {
+
+                    when (type) {
+                        ColumnType.BOOL -> entity.put(column, results.getBoolean(column))
+                        ColumnType.TEXT -> entity.put(column, results.getString(column))
+                        ColumnType.TIMESTAMP_WITHOUT_TZ -> entity.put(column, results.getTimestamp("updated").toLocalDateTime())
+                        ColumnType.BINARY -> entity.put(column, results.getBytes("body"))
+                    }
+                }
+            }
+            return entity
+
+        } finally {
+            get?.close()
+            conn?.close()
+        }
+    }
+
+    fun insertIndexValue(entityName: String, columns: List<Pair<String, ColumnType>>, vararg entities: Map<String, Any?>) {
+
+        if (entities.size == 0) {
+            throw IllegalArgumentException("Can not insert empty entities arguments into index")
+        }
+
         val tableName = resolveIndexTableName(entityName, columns)
     }
 

@@ -6,3 +6,9 @@ TODO:
 - drop index tables
 - findFirst
 - findAll
+
+DESIGN CONSIDERATIONS:
+- entities table for mysql versions contains added_id int PK column to store entries in sequentail order. On Postgresql
+it is not true (see http://dba.stackexchange.com/questions/38710/how-does-postgresql-physically-order-new-records-on-disk-after-a-cluster-on-pri)
+consider removing or leaving as it is but use only for indexes (see below)
+- currently indexes are using soft FK on id, but theoretically could use native PK (NUMBER), curious what's more efficient when joining
