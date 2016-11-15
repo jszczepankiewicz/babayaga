@@ -25,9 +25,10 @@ open class JdbcDataSourceConfig {
     open fun jdbcDataSource(): DataSource {
 
         val ds = HikariDataSource()
-        ds.jdbcUrl = "jdbc:postgresql:babayaga_tst"
-        ds.username = "test"
-        ds.password = "test"
+        ds.dataSourceClassName = "com.impossibl.postgres.jdbc.PGDataSource"
+        ds.dataSourceProperties.put("database", "babayaga_tst")
+        ds.dataSourceProperties.put("user", "test")
+        ds.dataSourceProperties.put("password", "test")
 
         return ds
     }

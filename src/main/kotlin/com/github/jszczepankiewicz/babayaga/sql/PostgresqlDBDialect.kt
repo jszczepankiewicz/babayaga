@@ -41,7 +41,7 @@ class PostgresqlDBDialect : DBDialect {
             primaryKeySql.append(column.first).append(",")
         }
 
-        sql.append("id BYTEA NOT NULL UNIQUE,")
+        sql.append("id UUID NOT NULL UNIQUE,")
         sql.append("PRIMARY KEY(%sid))".format(primaryKeySql.toString()))
         val retval = sql.toString()
         LOG.debug("Index ddl:\n\t{}", retval)

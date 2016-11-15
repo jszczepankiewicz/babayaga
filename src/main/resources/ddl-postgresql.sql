@@ -1,6 +1,6 @@
 --	create initial structure
 CREATE TABLE IF NOT EXISTS entities (
-    added_id SERIAL NOT NULL PRIMARY KEY,
+    added_id BIGSERIAL NOT NULL PRIMARY KEY,
     id UUID NOT NULL UNIQUE,
     updated TIMESTAMP WITHOUT TIME ZONE NOT NULL,
     body BYTEA

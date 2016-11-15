@@ -4,13 +4,13 @@ import com.github.jszczepankiewicz.babayaga.MessagePackTransporter
 import com.github.jszczepankiewicz.babayaga.Storage
 import com.github.jszczepankiewicz.babayaga.config.JdbcDataSourceConfig
 import com.github.jszczepankiewicz.babayaga.sql.EntitiesRepository
+import com.github.jszczepankiewicz.babayaga.sql.IndexRepository
 import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
 import com.github.jszczepankiewicz.babayaga.sql.PostgresqlDBDialect
 import io.damo.aspen.Test
 import io.damo.aspen.expectException
 import io.damo.aspen.spring.SpringTestTreeRunner
 import io.damo.aspen.spring.inject
-import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.LogManager.getLogger
 import org.assertj.core.api.Assertions
 import org.junit.runner.RunWith
@@ -25,7 +25,7 @@ import java.util.*
  * @author jszczepankiewicz
  */
 @RunWith(SpringTestTreeRunner::class)
-@ContextConfiguration(classes = arrayOf(EntitiesRepository::class, JdbcDataSourceConfig::class, MessagePackTransporter::class,
+@ContextConfiguration(classes = arrayOf(IndexRepository::class, EntitiesRepository::class, JdbcDataSourceConfig::class, MessagePackTransporter::class,
         JdbcMetaDataRepository::class, PostgresqlDBDialect::class, JdbcMetaDataRepository::class, Storage::class))
 @TestPropertySource("/db-test.properties")
 @Sql(scripts = arrayOf("/test-before-ddl.sql", "/ddl-postgresql.sql", "/test-after-ddl.sql"))

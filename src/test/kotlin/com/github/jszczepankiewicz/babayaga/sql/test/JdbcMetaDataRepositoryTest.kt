@@ -64,7 +64,7 @@ class JdbcMetaDataRepositoryTest {
 
         //  then
         assertThat(columns).hasSize(4)
-        assertThat(columns[0]).isEqualTo(JdbcColumn(name = "added_id", type = "serial", isNullable = false, ordinalPosition = 1))
+        assertThat(columns[0]).isEqualTo(JdbcColumn(name = "added_id", type = "bigserial", isNullable = false, ordinalPosition = 1))
         assertThat(columns[1]).isEqualTo(JdbcColumn(name = "id", type = "uuid", isNullable = false, ordinalPosition = 2))
         assertThat(columns[2]).isEqualTo(JdbcColumn(name = "updated", type = "timestamp", isNullable = false, ordinalPosition = 3))
         assertThat(columns[3]).isEqualTo(JdbcColumn(name = "body", type = "bytea", isNullable = true, ordinalPosition = 4))

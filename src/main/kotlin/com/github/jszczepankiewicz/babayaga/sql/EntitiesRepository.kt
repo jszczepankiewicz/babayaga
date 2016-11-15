@@ -25,7 +25,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
         LOG.info("PostgresqlRepository initialized")
     }
 
-    fun updateEntity(entityName:String, entity: Entity) {
+    fun updateEntity(entityName: String, entity: Entity) {
 
         val tableName = getTableName(entityName)
 
@@ -44,17 +44,19 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
             insert.setObject(3, entity.id)
             insert.executeUpdate()
 
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
         } finally {
             insert?.close()
             conn?.close()
         }
     }
 
-    fun getById(entityName:String, id: UUID): Entity? {
+    fun getById(entityName: String, id: UUID): Entity? {
 
         val tableName = getTableName(entityName)
 
-        LOG.debug("getById {}.{}", entityName,id)
+        LOG.debug("getById {}.{}", entityName, id)
 
         var get: PreparedStatement? = null
         var conn: Connection? = null
@@ -69,15 +71,18 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
                 entity = map(results)
             }
             return entity
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
         } finally {
             get?.close()
             conn?.close()
         }
     }
+
     /**
      * Insert entity into given table
      */
-    fun insertEntity(entityName:String, entity: Entity):Long{
+    fun insertEntity(entityName: String, entity: Entity): Long {
         val tableName = getTableName(entityName)
 
         LOG.debug("Before inserting tuple of id {}", entity.id)
@@ -100,6 +105,8 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
             if (key.equals(0)) {
                 throw IllegalStateException("No generated key info")
             }
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
         } finally {
             insert?.close()
             conn?.close()
@@ -112,9 +119,9 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
     /**
      * TODO: add cache
      */
-    fun getTableName(entityName:String):String{
+    fun getTableName(entityName: String): String {
 
-        if(entityName.trim().length==0){
+        if (entityName.trim().length == 0) {
             throw IllegalArgumentException("Can not resolve table name, entityName should not be empty")
         }
 
@@ -126,7 +133,7 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
      *
      * @return entity table name
      */
-    fun createEntityTable(entityName:String):String{
+    fun createEntityTable(entityName: String): String {
 
         val tableName = getTableName(entityName)
         val ddl = dbDialect.buildCreateEntityTableDDL(tableName)
@@ -138,6 +145,8 @@ class EntitiesRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
             insert = conn.prepareStatement(ddl)
             insert.executeUpdate()
 
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
         } finally {
             insert?.close()
             conn?.close()

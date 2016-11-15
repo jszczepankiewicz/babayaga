@@ -1,10 +1,10 @@
 package com.github.jszczepankiewicz.babayaga.sql
 
+import com.github.jszczepankiewicz.babayaga.sql.ColumnType.*
 import org.apache.logging.log4j.LogManager.getLogger
 import org.springframework.stereotype.Repository
-import java.sql.Connection
-import java.sql.PreparedStatement
-import java.sql.Statement
+import java.sql.*
+import java.time.LocalDateTime
 import java.util.*
 import javax.sql.DataSource
 
@@ -88,6 +88,8 @@ class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
             insert = conn.prepareStatement(ddl)
             insert.executeUpdate()
 
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
         } finally {
             insert?.close()
             conn?.close()
@@ -103,7 +105,7 @@ class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
 
     /**
      * Retrieve values stored in index table which are assigned to given id. Although not used directly from client api
-     * usefull in low level index repository tests.
+     * usefull in low level index entityRepo tests.
      */
     fun getIndexValuesById(entityName: String, columns: List<Pair<String, ColumnType>>, id: UUID): Map<String, Any?>? {
 
@@ -126,19 +128,38 @@ class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
                 for ((column, type) in columns) {
 
                     when (type) {
-                        ColumnType.BOOL -> entity.put(column, results.getBoolean(column))
-                        ColumnType.TEXT -> entity.put(column, results.getString(column))
-                        ColumnType.TIMESTAMP_WITHOUT_TZ -> entity.put(column, results.getTimestamp("updated").toLocalDateTime())
-                        ColumnType.BINARY -> entity.put(column, results.getBytes("body"))
+                        BOOL -> entity.put(column, results.getBoolean(column))
+                        TEXT -> entity.put(column, results.getString(column))
+                        TIMESTAMP_WITHOUT_TZ -> entity.put(column, results.getTimestamp(column).toLocalDateTime())
+                        BINARY -> entity.put(column, results.getBytes("body"))
                     }
                 }
             }
             return entity
 
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
         } finally {
             get?.close()
             conn?.close()
         }
+    }
+
+    /**
+     * TODO: cache
+     */
+    fun getInsertIntoIndexSql(entityName: String, columns: List<Pair<String, ColumnType>>): String {
+
+        val tableName = resolveIndexTableName(entityName, columns)
+        val builder = StringBuilder(1024)
+        builder.append("INSERT INTO ").append(tableName).append("(id")
+
+        for ((columnName, columnType) in columns) {
+            builder.append(",").append(columnName)
+        }
+
+        builder.append(") VALUES (?").append(",?".repeat(columns.size)).append(")")
+        return builder.toString()
     }
 
     fun insertIndexValue(entityName: String, columns: List<Pair<String, ColumnType>>, vararg entities: Map<String, Any?>) {
@@ -147,10 +168,41 @@ class IndexRepository(val dataSource: DataSource, val dbDialect: DBDialect) {
             throw IllegalArgumentException("Can not insert empty entities arguments into index")
         }
 
-        val tableName = resolveIndexTableName(entityName, columns)
+        var insert: PreparedStatement? = null
+        var conn: Connection? = null
+
+        try {
+            val query = getInsertIntoIndexSql(entityName, columns)
+
+            conn = dataSource.connection
+            insert = conn.prepareStatement(query)
+            LOG.debug("batch insert query: {}", query)
+            for (entity in entities) {
+                var i = 1
+                LOG.debug("for id: " + entity["id"])
+                insert.setObject(i++, (entity["id"] as UUID), Types.OTHER)
+
+                for ((columnName, columnType) in columns) {
+                    LOG.warn("XX: i: {} {} => {}", i, columnName, columnType)
+                    when (columnType) {
+                        BOOL -> insert.setBoolean(i++, entity[columnName] as Boolean)
+                        TEXT -> insert.setString(i++, entity[columnName] as String)
+                        TIMESTAMP_WITHOUT_TZ -> insert.setTimestamp(i++, Timestamp.valueOf(entity[columnName] as LocalDateTime))
+                        BINARY -> insert.setBinaryStream(i++, (entity[columnName] as ByteArray).inputStream())
+                    }
+                }
+                insert.addBatch()
+            }
+
+            insert.executeBatch()
+
+        } catch (e: SQLException) {
+            throw IllegalStateException(e)
+        } finally {
+            insert?.close()
+            conn?.close()
+        }
     }
 
-    fun deleteIndexValuesByEntityId(entityName: String, columns: List<String>) {
 
-    }
 }

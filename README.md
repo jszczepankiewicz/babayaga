@@ -1,5 +1,6 @@
 # BabaYaga
 [![Build Status](https://travis-ci.org/jszczepankiewicz/babayaga.svg?branch=master)](https://travis-ci.org/jszczepankiewicz/babayaga)
+[![license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 PoC to create schemaless document storage in Kotlin on top of RDBMS heavily nspired by:
 

@@ -12,7 +12,12 @@ import org.junit.runner.RunWith
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.TestPropertySource
 import org.springframework.test.context.jdbc.Sql
+import java.time.LocalDateTime
+import java.time.LocalDateTime.now
+import java.time.Month.APRIL
 import java.util.*
+import java.util.UUID.fromString
+import java.util.UUID.randomUUID
 
 /**
  * @author jszczepankiewicz
@@ -43,7 +48,7 @@ class IndexRepositorySpec : Test({
 
             assertThat(columns).containsExactly(
                     JdbcColumn(name = "name", type = "text", isNullable = false, ordinalPosition = 1),
-                    JdbcColumn(name = "id", type = "bytea", isNullable = false, ordinalPosition = 2))
+                    JdbcColumn(name = "id", type = "uuid", isNullable = false, ordinalPosition = 2))
 
         }
         test("supports multiple column index") {
@@ -56,7 +61,7 @@ class IndexRepositorySpec : Test({
                     JdbcColumn(name = "born", type = "timestamp", isNullable = false, ordinalPosition = 2),
                     JdbcColumn(name = "married", type = "bool", isNullable = false, ordinalPosition = 3),
                     JdbcColumn(name = "picture", type = "bytea", isNullable = false, ordinalPosition = 4),
-                    JdbcColumn(name = "id", type = "bytea", isNullable = false, ordinalPosition = 5))
+                    JdbcColumn(name = "id", type = "uuid", isNullable = false, ordinalPosition = 5))
         }
     }
     describe("When resolve index table name") {
@@ -91,16 +96,50 @@ class IndexRepositorySpec : Test({
     }
 
     describe("When inserting index value") {
+
+        val friends = "friends"
+        val indexOnNameAndBorn = listOf(
+                Pair("name", TEXT),
+                Pair("born", TIMESTAMP_WITHOUT_TZ))
+
+        before {
+            indexRepository.createIndexTable(friends, indexOnNameAndBorn)
+        }
+
         test("throw IAE when attempt to insert value for empty arguments") {
             expectException(IllegalArgumentException::class, "Can not insert empty entities arguments into index") {
                 indexRepository.insertIndexValue("artists", listOf(Pair("name", TEXT)))
             }
         }
+
+        test("supports inserting single entry") {
+
+            val maryska = mapOf("id" to randomUUID(), "name" to "Maryska Zakaszewska", "born" to now())
+            indexRepository.insertIndexValue(friends, indexOnNameAndBorn, maryska)
+
+            val stored = indexRepository.getIndexValuesById(friends, indexOnNameAndBorn, maryska.get("id") as UUID)
+            assertThat(stored).isEqualTo(maryska)
+        }
+
+        test("supports inserting multiple entries at once") {
+
+            val maryska = mapOf("id" to randomUUID(), "name" to "Maryska Zakaszewska", "born" to now())
+            val jacek = mapOf("id" to randomUUID(), "name" to "Jacek Sorgowicki", "born" to LocalDateTime.of(1986, APRIL, 8, 12, 30))
+
+            indexRepository.insertIndexValue(friends, indexOnNameAndBorn, jacek, maryska)
+
+            val storedJacek = indexRepository.getIndexValuesById(friends, indexOnNameAndBorn, jacek.get("id") as UUID)
+            val storedMaryska = indexRepository.getIndexValuesById(friends, indexOnNameAndBorn, maryska.get("id") as UUID)
+
+            assertThat(storedJacek).isEqualTo(jacek)
+            assertThat(storedMaryska).isEqualTo(maryska)
+        }
+
     }
 
     describe("When retrieving index values for given id") {
         test("retrieve indexed attributes map") {
-            val id = UUID.fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22")
+            val id = fromString("a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a22")
             val attributes = indexRepository.getIndexValuesById("cars", listOf(Pair("type", TEXT), Pair("active", BOOL)), id)
             assertThat(attributes!!.size).isEqualTo(3)
             assertThat(attributes["type"]).isEqualTo("Syrena Sport")
@@ -108,4 +147,6 @@ class IndexRepositorySpec : Test({
             assertThat(attributes["active"]).isEqualTo(true)
         }
     }
+
+
 })

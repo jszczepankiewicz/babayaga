@@ -54,13 +54,13 @@ class PostgresqlDBDialectSpec : Test({
 
         test("with single column") {
             assertThat(dialect.buildCreateIndexTableDDL("index_veryfamousartists_on_name", listOf(Pair("name", TEXT))))
-                    .isEqualTo("CREATE TABLE index_veryfamousartists_on_name(name TEXT NOT NULL,id BYTEA NOT NULL UNIQUE,PRIMARY KEY(name,id))")
+                    .isEqualTo("CREATE TABLE index_veryfamousartists_on_name(name TEXT NOT NULL,id UUID NOT NULL UNIQUE,PRIMARY KEY(name,id))")
         }
 
         test("with multiple columns") {
             assertThat(dialect.buildCreateIndexTableDDL("index_veryfamousartists_on_name", multipleAttributes))
                     .isEqualTo("CREATE TABLE index_veryfamousartists_on_name(name TEXT NOT NULL,born TIMESTAMP WITHOUT TIME ZONE NOT NULL," +
-                            "married BOOLEAN NOT NULL,picture BYTEA NOT NULL,id BYTEA NOT NULL UNIQUE,PRIMARY KEY(name,born,married,picture,id))")
+                            "married BOOLEAN NOT NULL,picture BYTEA NOT NULL,id UUID NOT NULL UNIQUE,PRIMARY KEY(name,born,married,picture,id))")
         }
     }
 })

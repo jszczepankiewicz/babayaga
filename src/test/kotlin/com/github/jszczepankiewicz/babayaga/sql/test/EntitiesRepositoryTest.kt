@@ -1,7 +1,10 @@
 package com.github.jszczepankiewicz.babayaga.sql.test
 
 import com.github.jszczepankiewicz.babayaga.config.JdbcDataSourceConfig
-import com.github.jszczepankiewicz.babayaga.sql.*
+import com.github.jszczepankiewicz.babayaga.sql.EntitiesRepository
+import com.github.jszczepankiewicz.babayaga.sql.Entity
+import com.github.jszczepankiewicz.babayaga.sql.JdbcMetaDataRepository
+import com.github.jszczepankiewicz.babayaga.sql.PostgresqlDBDialect
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -12,8 +15,9 @@ import org.springframework.test.context.jdbc.Sql
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import java.time.LocalDateTime.now
 import java.time.LocalDateTime.parse
-import java.util.*
+import java.util.UUID
 import java.util.UUID.randomUUID
+import javax.sql.DataSource
 
 
 /**
@@ -36,6 +40,30 @@ class EntitiesRepositoryTest {
 
     @Autowired
     lateinit var metaRepository: JdbcMetaDataRepository
+
+    @Autowired
+    lateinit var ds: DataSource
+
+
+    @Test
+    fun batch() {
+        val conn = ds.connection
+
+        val stmt2 = conn.createStatement()
+        stmt2.execute("CREATE TEMP TABLE if not exists uuidtest_batch(id uuid, x text)")
+        stmt2.close()
+
+        val uuid = UUID.randomUUID()
+        val uuid2 = UUID.randomUUID()
+        val ps = conn.prepareStatement("INSERT INTO uuidtest_batch(id, x) VALUES (?,?)")
+        ps.setObject(1, uuid)
+        ps.setString(2, uuid.toString())
+        ps.addBatch()
+        ps.setObject(1, uuid2)
+        ps.setString(2, uuid2.toString())
+        ps.executeBatch()
+        ps.close()
+    }
 
     @Test
     fun deleteNonExistingEntity() {
